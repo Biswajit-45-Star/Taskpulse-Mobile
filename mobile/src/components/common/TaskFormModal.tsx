@@ -13,6 +13,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import AppInput from "./AppInput";
 import AppButton from "./AppButton";
+import DateInput, {
+  formatDate,
+  parseDate,
+} from "./DateInput";
 import { COLORS } from "../../constants/colors";
 
 export type TaskFormValues = {
@@ -79,7 +83,17 @@ const TaskFormModal = ({
       setDescription(initialValues?.description || "");
       setPriority(initialValues?.priority || "MEDIUM");
       setStatus(initialValues?.status || "TODO");
-      setDueDate(initialValues?.dueDate || "");
+
+      const normalizedDueDate = initialValues?.dueDate
+        ? (() => {
+            const parsed = parseDate(initialValues.dueDate);
+            return parsed
+              ? formatDate(parsed)
+              : initialValues.dueDate;
+          })()
+        : "";
+
+      setDueDate(normalizedDueDate);
     }
   }, [visible, initialValues]);
 
@@ -88,27 +102,20 @@ const TaskFormModal = ({
       return;
     }
 
+    const formattedDueDate = dueDate.trim()
+      ? (() => {
+          const parsed = parseDate(dueDate.trim());
+          return parsed ? parsed.toISOString() : dueDate.trim();
+        })()
+      : "";
+
     onSubmit({
       title: taskTitle.trim(),
       description: description.trim(),
       priority,
       status,
-      dueDate: dueDate.trim(),
+      dueDate: formattedDueDate,
     });
-  };
-
-  // Get priority label with emoji
-  const getPriorityEmoji = (p: string) => {
-    switch (p) {
-      case "HIGH":
-        return "🔴";
-      case "MEDIUM":
-        return "🟡";
-      case "LOW":
-        return "🟢";
-      default:
-        return "";
-    }
   };
 
   return (
@@ -235,16 +242,12 @@ const TaskFormModal = ({
 
               {/* Due Date Input */}
               <View style={styles.inputWrapper}>
-                <AppInput
+                <DateInput
                   label="Due Date"
                   value={dueDate}
                   onChangeText={setDueDate}
                   placeholder="YYYY-MM-DD"
-                  keyboardType="default"
                 />
-                <TouchableOpacity style={styles.calendarIcon}>
-                  <Ionicons name="calendar-outline" size={22} color={COLORS.gray} />
-                </TouchableOpacity>
               </View>
 
               {/* Action Buttons */}

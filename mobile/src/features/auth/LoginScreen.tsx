@@ -18,6 +18,7 @@ import { COLORS } from "../../constants/colors";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useToast } from "../../components/common/ToastProvider";
 
 import { loginUser } from "../../api/auth.api";
 import { loginSuccess } from "../../redux/authSlice";
@@ -51,6 +52,7 @@ const LoginScreen = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const { showToast } = useToast();
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -62,13 +64,20 @@ const LoginScreen = () => {
 
       dispatch(loginSuccess(response));
 
+      showToast({
+        type: "success",
+        title: "Login successful",
+        message: "Welcome back!",
+      });
+
       router.replace("/(tabs)");
     } catch (error: any) {
       console.log(error.response?.data);
-      Alert.alert(
-        "Login Failed",
-        error.response?.data?.message || "An error occurred",
-      );
+      showToast({
+        type: "error",
+        title: "Login Failed",
+        message: error.response?.data?.message || "An error occurred",
+      });
     } finally {
       setLoading(false);
     }

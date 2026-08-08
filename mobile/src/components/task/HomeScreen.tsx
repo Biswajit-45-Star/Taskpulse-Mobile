@@ -20,6 +20,7 @@ import TaskFormModal, { TaskFormValues } from "../common/TaskFormModal";
 
 import { RootState } from "../../redux/store";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import { useToast } from "../common/ToastProvider";
 
 import {
   fetchTasks,
@@ -41,6 +42,7 @@ const HomeScreen = () => {
   // --------------------------------------------------
 
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
 
   const { tasks, loading, error } = useAppSelector((state) => state.tasks);
 
@@ -61,6 +63,16 @@ const HomeScreen = () => {
   useEffect(() => {
     dispatch(fetchTasks());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (error) {
+      showToast({
+        type: "error",
+        title: "Task error",
+        message: error,
+      });
+    }
+  }, [error, showToast]);
 
   // --------------------------------------------------
   // Task Statistics
@@ -132,6 +144,17 @@ const HomeScreen = () => {
 
       if (result.meta.requestStatus === "fulfilled") {
         await refreshTasks();
+        showToast({
+          type: "success",
+          title: isEditing ? "Task updated" : "Task created",
+          message: isEditing ? "Task was updated successfully." : "Task was created successfully.",
+        });
+      } else {
+        showToast({
+          type: "error",
+          title: "Task failed",
+          message: "Unable to save the task. Please try again.",
+        });
       }
     } finally {
       setActionLoading(false);
@@ -151,6 +174,17 @@ const HomeScreen = () => {
 
       if (result.meta.requestStatus === "fulfilled") {
         await refreshTasks();
+        showToast({
+          type: "success",
+          title: "Task deleted",
+          message: "Task was deleted successfully.",
+        });
+      } else {
+        showToast({
+          type: "error",
+          title: "Delete failed",
+          message: "Unable to delete the task. Please try again.",
+        });
       }
     } finally {
       setActionLoading(false);
@@ -341,13 +375,14 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <View>
+      <View style={{ flex: 1 }}>
+        <ListHeader />
         <FlatList
+          style={{ flex: 1 }}
           data={tasks}
           keyExtractor={(item) => item._id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          ListHeaderComponent={ListHeader}
+          contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
           ListEmptyComponent={EmptyTasks}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           renderItem={({ item }) => (
@@ -419,6 +454,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    marginBottom: 50
   },
 
   listContent: {

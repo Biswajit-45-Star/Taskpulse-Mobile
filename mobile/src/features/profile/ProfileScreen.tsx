@@ -16,14 +16,21 @@ import { logout } from "../../redux/authSlice";
 import { RootState } from "../../redux/store";
 import AppButton from "../../components/common/AppButton";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useToast } from "../../components/common/ToastProvider";
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { showToast } = useToast();
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("auth");
     dispatch(logout());
+    showToast({
+      type: "success",
+      title: "Logged out",
+      message: "You have been logged out successfully.",
+    });
     router.replace("/(auth)/login");
   };
 

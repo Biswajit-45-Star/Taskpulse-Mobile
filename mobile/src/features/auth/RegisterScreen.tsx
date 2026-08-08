@@ -17,6 +17,7 @@ import { COLORS } from "../../constants/colors";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useToast } from "../../components/common/ToastProvider";
 
 import { registerUser } from "../../api/auth.api";
 import { loginSuccess } from "../../redux/authSlice";
@@ -55,6 +56,7 @@ const RegisterScreen = () => {
 
   const dispatch = useDispatch();
   const [loading, setLoading] = React.useState(false);
+  const { showToast } = useToast();
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -69,9 +71,19 @@ const RegisterScreen = () => {
       await AsyncStorage.setItem("auth", JSON.stringify(response));
       dispatch(loginSuccess(response));
 
+      showToast({
+        type: "success",
+        title: "Registration successful",
+        message: "Your account has been created.",
+      });
+
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.log(error.response?.data || error.message);
+      showToast({
+        type: "error",
+        title: "Registration Failed",
+        message: error.response?.data?.message || error.message || "An error occurred",
+      });
     } finally {
       setLoading(false);
     }
