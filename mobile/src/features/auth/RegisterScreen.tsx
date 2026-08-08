@@ -69,6 +69,7 @@ const RegisterScreen = () => {
       });
 
       await AsyncStorage.setItem("auth", JSON.stringify(response));
+      await AsyncStorage.setItem("token", response.token);
       dispatch(loginSuccess(response));
 
       showToast({
@@ -135,6 +136,7 @@ const RegisterScreen = () => {
               value={value}
               onChangeText={onChange}
               secureTextEntry
+              showPasswordToggle
               error={errors.password?.message}
             />
           )}
@@ -150,6 +152,7 @@ const RegisterScreen = () => {
               value={value}
               onChangeText={onChange}
               secureTextEntry
+              showPasswordToggle
               error={errors.confirmPassword?.message}
             />
           )}

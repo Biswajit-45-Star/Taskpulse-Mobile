@@ -25,6 +25,7 @@ const ProfileScreen = () => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("auth");
+    await AsyncStorage.removeItem("token");
     dispatch(logout());
     showToast({
       type: "success",

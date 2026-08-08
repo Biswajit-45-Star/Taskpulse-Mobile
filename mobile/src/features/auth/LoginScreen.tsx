@@ -61,6 +61,7 @@ const LoginScreen = () => {
       const response = await loginUser(data);
 
       await AsyncStorage.setItem("auth", JSON.stringify(response));
+      await AsyncStorage.setItem("token", response.token);
 
       dispatch(loginSuccess(response));
 

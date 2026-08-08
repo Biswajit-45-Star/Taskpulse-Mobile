@@ -360,7 +360,7 @@ const HomeScreen = () => {
           Create your first task to get started.
         </Text>
 
-        <TouchableOpacity style={styles.emptyButton} activeOpacity={0.8}>
+        <TouchableOpacity onPress={()=>setIsFormOpen(true)} style={styles.emptyButton} activeOpacity={0.8}>
           <Ionicons name="add" size={20} color={COLORS.white} />
 
           <Text style={styles.emptyButtonText}>Create Task</Text>
