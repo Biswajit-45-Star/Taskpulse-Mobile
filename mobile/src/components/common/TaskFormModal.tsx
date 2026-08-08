@@ -183,9 +183,9 @@ const TaskFormModal = ({
                       onPress={() => setPriority(option)}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.priorityEmoji}>
+                      {/* <Text style={styles.priorityEmoji}>
                         {getPriorityEmoji(option)}
-                      </Text>
+                      </Text> */}
                       <Text
                         style={[
                           styles.optionText,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     backgroundColor: "#D1D5DB",
-    borderRadius: 2,
+    // borderRadius: 2,
     alignSelf: "center",
     marginBottom: 16,
   },
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    // borderRadius: 18,
     backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   optionButton: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 12,
+    // borderRadius: 12,
     backgroundColor: "#F9FAFB",
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   calendarIcon: {
     position: "absolute",
     right: 12,
-    bottom: 14,
+    bottom: 34,
   },
   buttonRow: {
     flexDirection: "row",
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   footerButton: {
     flex: 1,
     height: 54,
-    borderRadius: 14,
+    // borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
     justifyContent: "center",

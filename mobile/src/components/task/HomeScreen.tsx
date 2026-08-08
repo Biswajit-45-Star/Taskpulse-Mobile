@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
 
-    borderRadius: 12,
+    // borderRadius: 12,
 
     paddingVertical: 14,
     paddingHorizontal: 10,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
 
-    borderRadius: 40,
+    // borderRadius: 40,
 
     backgroundColor: COLORS.border,
 
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 11,
 
-    borderRadius: 10,
+    // borderRadius: 10,
 
     marginTop: 20,
 
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
 
     padding: 12,
 
-    borderRadius: 10,
+    // borderRadius: 10,
 
     backgroundColor: "#FEF2F2",
 

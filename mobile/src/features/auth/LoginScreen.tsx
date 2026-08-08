@@ -50,6 +50,7 @@ const LoginScreen = () => {
 
   const dispatch = useDispatch();
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -106,6 +107,7 @@ const LoginScreen = () => {
               value={value}
               onChangeText={onChange}
               secureTextEntry
+              showPasswordToggle
               error={errors.password?.message}
             />
           )}

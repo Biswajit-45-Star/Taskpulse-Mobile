@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     backgroundColor: COLORS.white,
-    borderRadius: 20,
+    // borderRadius: 20,
     paddingVertical: 24,
     paddingHorizontal: 20,
     shadowColor: COLORS.text,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     height: 52,
-    borderRadius: 12,
+    // borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
   },

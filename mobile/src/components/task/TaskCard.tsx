@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
     padding: 16,
-    borderRadius: 16,
+    // borderRadius: 16,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: {
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    // borderRadius: 12,
     gap: 4,
   },
   priorityText: {
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    // borderRadius: 12,
     gap: 4,
   },
   statusText: {
@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    // borderRadius: 8,
   },
   actionIcon: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    // borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
   },

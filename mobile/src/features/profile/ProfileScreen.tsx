@@ -135,8 +135,7 @@ const styles = StyleSheet.create({
   editButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "#EEF2FF",
+    // borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     paddingVertical: 30,
     paddingHorizontal: 20,
-    borderRadius: 16,
+    // borderRadius: 16,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -163,12 +162,12 @@ const styles = StyleSheet.create({
   avatar: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    // borderRadius: 40,
   },
   avatarPlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    // borderRadius: 40,
     backgroundColor: "#4F46E5",
     justifyContent: "center",
     alignItems: "center",
@@ -193,7 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEF2FF",
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    // borderRadius: 12,
   },
   roleText: {
     fontSize: 12,
@@ -204,7 +203,7 @@ const styles = StyleSheet.create({
   menuSection: {
     backgroundColor: "#FFFFFF",
     marginHorizontal: 20,
-    borderRadius: 16,
+    // borderRadius: 16,
     paddingVertical: 8,
     shadowColor: "#000",
     shadowOffset: {
@@ -226,7 +225,7 @@ const styles = StyleSheet.create({
   menuIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    // borderRadius: 10,
     backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
