@@ -1,16 +1,20 @@
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+﻿import { useEffect, useState } from "react";
+import * as SecureStore from "expo-secure-store";
 import { useDispatch } from "react-redux";
 
 import { loginSuccess, logout } from "../redux/authSlice";
+import {
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  USER_KEY,
+  requestRefreshToken,
+} from "../api/axios";
 
-type AuthStorage = {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
 };
 
 export default function useAuth() {
@@ -20,20 +24,58 @@ export default function useAuth() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const savedAuth = await AsyncStorage.getItem("auth");
+      const storedRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      const storedAccessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      const storedUser = await SecureStore.getItemAsync(USER_KEY);
 
-      if (savedAuth) {
+      const parsedUser = storedUser ? (JSON.parse(storedUser) as User) : null;
+
+      if (storedRefreshToken) {
         try {
-          const auth: AuthStorage = JSON.parse(savedAuth);
+          const response = await requestRefreshToken(storedRefreshToken);
+          const accessToken = response.accessToken ?? response.token;
+          const refreshToken = response.refreshToken ?? storedRefreshToken;
+          const user = response.user ?? parsedUser;
 
-          if (auth?.token) {
-            setToken(auth.token);
-            dispatch(loginSuccess(auth));
+          if (!accessToken || !user) {
+            throw new Error("Invalid refresh response");
           }
+
+          await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
+          await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+          await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+
+          dispatch(
+            loginSuccess({
+              token: accessToken,
+              refreshToken,
+              user,
+            })
+          );
+          setToken(accessToken);
         } catch {
-          await AsyncStorage.removeItem("auth");
+          await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+          await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+          await SecureStore.deleteItemAsync(USER_KEY);
           dispatch(logout());
+        } finally {
+          setLoading(false);
         }
+
+        return;
+      }
+
+      if (storedAccessToken && parsedUser) {
+        dispatch(
+          loginSuccess({
+            token: storedAccessToken,
+            refreshToken: null,
+            user: parsedUser,
+          })
+        );
+        setToken(storedAccessToken);
+      } else {
+        dispatch(logout());
       }
 
       setLoading(false);

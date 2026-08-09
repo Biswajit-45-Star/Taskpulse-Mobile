@@ -15,7 +15,7 @@ import AppInput from "../../components/common/AppInput";
 import AppButton from "../../components/common/AppButton";
 import { COLORS } from "../../constants/colors";
 import { useDispatch } from "react-redux";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
 import { useToast } from "../../components/common/ToastProvider";
 
@@ -68,9 +68,22 @@ const RegisterScreen = () => {
         password: data.password,
       });
 
-      await AsyncStorage.setItem("auth", JSON.stringify(response));
-      await AsyncStorage.setItem("token", response.token);
-      dispatch(loginSuccess(response));
+      const accessToken = response.accessToken ?? response.token;
+      const refreshToken = response.refreshToken ?? null;
+      const user = response.user;
+
+      await SecureStore.setItemAsync("accessToken", accessToken);
+      if (refreshToken) {
+        await SecureStore.setItemAsync("refreshToken", refreshToken);
+      }
+      await SecureStore.setItemAsync("user", JSON.stringify(user));
+      dispatch(
+        loginSuccess({
+          token: accessToken,
+          refreshToken,
+          user,
+        })
+      );
 
       showToast({
         type: "success",

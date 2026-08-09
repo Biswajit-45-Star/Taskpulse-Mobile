@@ -7,7 +7,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { useDispatch, useSelector } from "react-redux";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,8 +24,9 @@ const ProfileScreen = () => {
   const { showToast } = useToast();
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("auth");
-    await AsyncStorage.removeItem("token");
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
+    await SecureStore.deleteItemAsync("user");
     dispatch(logout());
     showToast({
       type: "success",

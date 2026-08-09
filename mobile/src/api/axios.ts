@@ -1,31 +1,50 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+﻿import axios, { AxiosError } from "axios";
+import * as SecureStore from "expo-secure-store";
+import { store } from "../redux/store";
+import { logout, updateTokens } from "../redux/authSlice";
+
+const baseURL = "https://taskpulse-mobile.onrender.com/api";
+
+export const ACCESS_TOKEN_KEY = "accessToken";
+export const REFRESH_TOKEN_KEY = "refreshToken";
+export const USER_KEY = "user";
 
 const api = axios.create({
-  baseURL: "https://taskpulse-mobile.onrender.com/api",
+  baseURL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+async function clearStoredAuth() {
+  await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+  await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+  await SecureStore.deleteItemAsync(USER_KEY);
+}
+
+async function refreshAccessToken(refreshToken: string) {
+  const refreshClient = axios.create({
+    baseURL,
+    timeout: 10000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const response = await refreshClient.post("/auth/refresh", {
+    refreshToken,
+  });
+
+  return response.data;
+}
+
 api.interceptors.request.use(async (config) => {
   try {
-    let token = await AsyncStorage.getItem("token");
-
-    if (!token) {
-      const raw = await AsyncStorage.getItem("auth");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          token = parsed?.token || null;
-        } catch (e) {
-          token = null;
-        }
-      }
-    }
+    const token = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
 
     if (token) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (e) {
@@ -35,4 +54,69 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+
+    if (
+      !originalRequest ||
+      !error.response ||
+      originalRequest._retry ||
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register") ||
+      originalRequest.url?.includes("/auth/refresh")
+    ) {
+      return Promise.reject(error);
+    }
+
+    if (error.response.status === 401) {
+      const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+
+      if (!refreshToken) {
+        await clearStoredAuth();
+        store.dispatch(logout());
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        const response = await refreshAccessToken(refreshToken);
+        const newAccessToken = response.accessToken ?? response.token;
+        const newRefreshToken = response.refreshToken ?? refreshToken;
+
+        if (!newAccessToken) {
+          throw new Error("Refresh response did not return a new access token.");
+        }
+
+        await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, newAccessToken);
+
+        if (newRefreshToken) {
+          await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
+        }
+
+        store.dispatch(
+          updateTokens({
+            token: newAccessToken,
+            refreshToken: newRefreshToken,
+          })
+        );
+
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        await clearStoredAuth();
+        store.dispatch(logout());
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const requestRefreshToken = refreshAccessToken;
 export default api;

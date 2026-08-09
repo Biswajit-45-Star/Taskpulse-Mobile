@@ -1,6 +1,19 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+﻿import bcrypt from "bcrypt";
 import User from "../models/User.js";
+import RefreshToken from "../models/RefreshToken.js";
+import {
+  signAccessToken,
+  createRefreshTokenHash,
+  verifyRefreshTokenHash,
+  getRefreshTokenExpiry,
+} from "../utils/jwt.js";
+
+const buildUserResponse = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  avatar: user.avatar,
+});
 
 /**
  * Register User
@@ -10,7 +23,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -18,7 +30,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check existing user
     const existingUser = await User.findOne({
       email: email.toLowerCase(),
     });
@@ -30,37 +41,30 @@ export const register = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await User.create({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
     });
 
-    // Generate JWT
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
+    const accessToken = signAccessToken(user._id);
+    const { plainToken, tokenHash } = await createRefreshTokenHash();
+    const refreshTokenDoc = await RefreshToken.create({
+      user: user._id,
+      tokenHash,
+      expiresAt: getRefreshTokenExpiry(),
+    });
+    const refreshToken = `${refreshTokenDoc._id.toString()}.${plainToken}`;
 
     return res.status(201).json({
       success: true,
       message: "Registration successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
+      accessToken,
+      refreshToken,
+      token: accessToken,
+      user: buildUserResponse(user),
     });
   } catch (error) {
     console.error("Register Error:", error);
@@ -80,7 +84,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -88,7 +91,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user
     const user = await User.findOne({
       email: email.toLowerCase(),
     });
@@ -100,7 +102,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Compare password
     const isMatched = await bcrypt.compare(password, user.password);
 
     if (!isMatched) {
@@ -110,30 +111,127 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate JWT
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
+    const accessToken = signAccessToken(user._id);
+    const { plainToken, tokenHash } = await createRefreshTokenHash();
+    const refreshTokenDoc = await RefreshToken.create({
+      user: user._id,
+      tokenHash,
+      expiresAt: getRefreshTokenExpiry(),
+    });
+    const refreshToken = `${refreshTokenDoc._id.toString()}.${plainToken}`;
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
+      accessToken,
+      refreshToken,
+      token: accessToken,
+      user: buildUserResponse(user),
     });
   } catch (error) {
     console.error("Login Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required",
+      });
+    }
+
+    const parts = refreshToken.split(".");
+    if (parts.length !== 2) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    const [tokenId, tokenSecret] = parts;
+    const storedToken = await RefreshToken.findById(tokenId);
+
+    if (
+      !storedToken ||
+      storedToken.revoked ||
+      storedToken.expiresAt < new Date()
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is invalid or expired",
+      });
+    }
+
+    const isValid = await verifyRefreshTokenHash(
+      tokenSecret,
+      storedToken.tokenHash
+    );
+
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is invalid",
+      });
+    }
+
+    const accessToken = signAccessToken(storedToken.user);
+
+    return res.status(200).json({
+      success: true,
+      accessToken,
+    });
+  } catch (error) {
+    console.error("Refresh Token Error:", error);
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required",
+      });
+    }
+
+    const parts = refreshToken.split(".");
+    if (parts.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid refresh token",
+      });
+    }
+
+    const [tokenId] = parts;
+    const storedToken = await RefreshToken.findById(tokenId);
+
+    if (storedToken && !storedToken.revoked) {
+      storedToken.revoked = true;
+      await storedToken.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    console.error("Logout Error:", error);
 
     return res.status(500).json({
       success: false,
