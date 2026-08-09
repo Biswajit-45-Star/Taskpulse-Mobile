@@ -1,9 +1,9 @@
-const dns = require("dns");
+import dns from "dns";
 
 // Temporary diagnostic
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
