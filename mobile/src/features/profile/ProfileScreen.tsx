@@ -128,7 +128,7 @@ const ProfileScreen = () => {
         {/* Menu Items */}
         <View style={styles.menuSection}>
           <TouchableOpacity
-            onPress={() => Alert.alert("This Feature is Comming Soon")}
+            onPress={openEditProfile}
             style={styles.menuItem}
           >
             <View style={styles.menuIconContainer}>
@@ -155,7 +155,10 @@ const ProfileScreen = () => {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            onPress={() => router.push("/support")}
+            style={styles.menuItem}
+          >
             <View style={styles.menuIconContainer}>
               <Ionicons name="help-circle-outline" size={22} color="#4F46E5" />
             </View>

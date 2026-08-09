@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import {
   View,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { router } from "expo-router";
 
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,14 +56,35 @@ const HomeScreen = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<"ALL" | "TODO" | "IN_PROGRESS" | "DONE">("ALL");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   // --------------------------------------------------
   // Fetch Tasks
   // --------------------------------------------------
 
+  const fetchFilteredTasks = useCallback(
+    async (
+      status: "ALL" | "TODO" | "IN_PROGRESS" | "DONE" = filterStatus,
+      order: "desc" | "asc" = sortOrder
+    ) => {
+      const params: { status?: string; sortBy: string; order: string } = {
+        sortBy: "createdAt",
+        order,
+      };
+
+      if (status !== "ALL") {
+        params.status = status;
+      }
+
+      await dispatch(fetchTasks(params));
+    },
+    [dispatch, filterStatus, sortOrder]
+  );
+
   useEffect(() => {
-    dispatch(fetchTasks());
-  }, [dispatch]);
+    fetchFilteredTasks();
+  }, [fetchFilteredTasks]);
 
   useEffect(() => {
     if (error) {
@@ -131,22 +153,28 @@ const HomeScreen = () => {
   };
 
   const refreshTasks = async () => {
-    await dispatch(fetchTasks());
+    await fetchFilteredTasks();
   };
 
-  const openFilter = async () => {
-    // simple filter example: toggle status 'DONE' or all
-    const status = await new Promise<string | undefined>((resolve) => {
-      // for simplicity, prompt via window.confirm isn't available; just fetch pending by default
-      resolve(undefined);
-    });
-
-    dispatch(fetchTasks({ status }));
+  const openFilter = () => {
+    const statuses: Array<"ALL" | "TODO" | "IN_PROGRESS" | "DONE"> = [
+      "ALL",
+      "TODO",
+      "IN_PROGRESS",
+      "DONE",
+    ];
+    const currentIndex = statuses.indexOf(filterStatus);
+    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+    setFilterStatus(nextStatus);
   };
 
-  const openSort = async () => {
-    // example: sort by dueDate asc
-    dispatch(fetchTasks({ sortBy: "dueDate", order: "asc" }));
+  const openSort = () => {
+    const nextOrder = sortOrder === "desc" ? "asc" : "desc";
+    setSortOrder(nextOrder);
+  };
+
+  const openNotifications = () => {
+    router.push("/notifications");
   };
 
   const handleFormSubmit = async (values: TaskFormValues) => {
@@ -229,6 +257,7 @@ const HomeScreen = () => {
           <TouchableOpacity
             style={styles.notificationButton}
             activeOpacity={0.7}
+            onPress={openNotifications}
           >
             <Ionicons
               name="notifications-outline"
@@ -313,14 +342,23 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.filterSummary}>
+          <Text style={styles.filterSummaryText}>
+            Filter: {filterStatus === "ALL" ? "All" : filterStatus.replace("_", " ")}
+          </Text>
+          <Text style={styles.filterSummaryText}>
+            Sort: {sortOrder === "desc" ? "Newest" : "Oldest"}
+          </Text>
+        </View>
+
         {/* Task Section Header */}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Tasks</Text>
 
-          <TouchableOpacity activeOpacity={0.7}>
+          {/* <TouchableOpacity activeOpacity={0.7}>
             <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* API Error */}
@@ -846,5 +884,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
 
     color: COLORS.danger,
+  },
+
+  filterSummary: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+
+  filterSummaryText: {
+    fontSize: 13,
+    color: COLORS.text,
+    fontWeight: "600",
   },
 });
