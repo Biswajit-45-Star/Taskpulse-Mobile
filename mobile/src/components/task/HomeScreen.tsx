@@ -138,16 +138,19 @@ const HomeScreen = () => {
     setActionLoading(true);
 
     try {
-      const result = isEditing && selectedTask
-        ? await dispatch(editTask({ id: selectedTask._id, data: values }))
-        : await dispatch(addTask(values));
+      const result =
+        isEditing && selectedTask
+          ? await dispatch(editTask({ id: selectedTask._id, data: values }))
+          : await dispatch(addTask(values));
 
       if (result.meta.requestStatus === "fulfilled") {
         await refreshTasks();
         showToast({
           type: "success",
           title: isEditing ? "Task updated" : "Task created",
-          message: isEditing ? "Task was updated successfully." : "Task was created successfully.",
+          message: isEditing
+            ? "Task was updated successfully."
+            : "Task was created successfully.",
         });
       } else {
         showToast({
@@ -324,22 +327,6 @@ const HomeScreen = () => {
   };
 
   // --------------------------------------------------
-  // Loading
-  // --------------------------------------------------
-
-  if (loading && tasks.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-
-          <Text style={styles.loadingText}>Loading tasks...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // --------------------------------------------------
   // Empty State
   // --------------------------------------------------
 
@@ -360,7 +347,11 @@ const HomeScreen = () => {
           Create your first task to get started.
         </Text>
 
-        <TouchableOpacity onPress={()=>setIsFormOpen(true)} style={styles.emptyButton} activeOpacity={0.8}>
+        <TouchableOpacity
+          onPress={() => setIsFormOpen(true)}
+          style={styles.emptyButton}
+          activeOpacity={0.8}
+        >
           <Ionicons name="add" size={20} color={COLORS.white} />
 
           <Text style={styles.emptyButtonText}>Create Task</Text>
@@ -383,7 +374,19 @@ const HomeScreen = () => {
           keyExtractor={(item) => item._id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
-          ListEmptyComponent={EmptyTasks}
+          ListEmptyComponent={
+            loading && tasks.length === 0 ? (
+              <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={COLORS.primary} />
+
+                  <Text style={styles.loadingText}>Loading tasks...</Text>
+                </View>
+              </SafeAreaView>
+            ) : (
+              <EmptyTasks />
+            )
+          }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           renderItem={({ item }) => (
             <TaskCard
@@ -454,7 +457,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    marginBottom: 50
+    marginBottom: 50,
   },
 
   listContent: {
