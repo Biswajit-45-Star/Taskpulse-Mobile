@@ -21,8 +21,8 @@ export interface CreateTaskData {
 }
 
 // GET /api/tasks
-export const getTasks = async (): Promise<Task[]> => {
-  const response = await api.get("/tasks");
+export const getTasks = async (params?: { status?: string; priority?: string; sortBy?: string; order?: string }): Promise<Task[]> => {
+  const response = await api.get("/tasks", { params });
 
   return response.data.data;
 };

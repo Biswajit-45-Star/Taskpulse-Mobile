@@ -1,4 +1,4 @@
-﻿import React from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,22 +6,39 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useDispatch, useSelector } from "react-redux";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { logout } from "../../redux/authSlice";
+import { logout, loginSuccess } from "../../redux/authSlice";
 import { RootState } from "../../redux/store";
 import AppButton from "../../components/common/AppButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToast } from "../../components/common/ToastProvider";
+import ProfileFormModal from "../../components/common/ProfileFormModal";
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const { showToast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const openEditProfile = () => {
+    setSelectedProfile(null);
+    setIsEditing(false);
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedProfile(null);
+    setIsEditing(false);
+  };
 
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync("accessToken");
@@ -49,11 +66,48 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+
+      <ProfileFormModal
+        visible={isFormOpen}
+        defaultValues={{ name: user?.name || "", email: user?.email || "" }}
+        onClose={closeForm}
+        loading={false}
+        onSubmit={async (values) => {
+          try {
+            const { updateProfile } = await import("../../api/user.api");
+            const updated = await updateProfile(values);
+
+            // update secure store
+            await SecureStore.setItemAsync("user", JSON.stringify(updated));
+
+            // preserve tokens from redux
+            const state = (await import("../../redux/store")).store.getState();
+            const token = state.auth.token;
+            const refreshToken = state.auth.refreshToken;
+
+            if (!token) {
+              throw new Error("Missing auth token while updating profile");
+            }
+
+            dispatch(
+              loginSuccess({ token, refreshToken: refreshToken ?? undefined, user: updated })
+            );
+
+            showToast({ type: "success", title: "Profile updated", message: "Your profile was updated." });
+          } catch (e: any) {
+            console.error(e);
+            showToast({ type: "error", title: "Update failed", message: e.response?.data?.message || "Unable to update profile" });
+          }
+
+          closeForm();
+        }}
+      />
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity onPress={openEditProfile} style={styles.editButton}>
             <Ionicons name="create-outline" size={22} color="#4F46E5" />
           </TouchableOpacity>
         </View>
@@ -73,7 +127,10 @@ const ProfileScreen = () => {
 
         {/* Menu Items */}
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            onPress={() => Alert.alert("This Feature is Comming Soon")}
+            style={styles.menuItem}
+          >
             <View style={styles.menuIconContainer}>
               <Ionicons name="person-outline" size={22} color="#4F46E5" />
             </View>
@@ -84,7 +141,10 @@ const ProfileScreen = () => {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            onPress={() => Alert.alert("This Feature is Comming Soon")}
+            style={styles.menuItem}
+          >
             <View style={styles.menuIconContainer}>
               <Ionicons name="settings-outline" size={22} color="#4F46E5" />
             </View>

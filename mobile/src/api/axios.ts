@@ -1,7 +1,6 @@
 ﻿import axios, { AxiosError } from "axios";
 import * as SecureStore from "expo-secure-store";
-import { store } from "../redux/store";
-import { logout, updateTokens } from "../redux/authSlice";
+// avoid static imports of store/slices to prevent require cycles
 
 const baseURL = "https://taskpulse-mobile.onrender.com/api";
 
@@ -75,6 +74,8 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         await clearStoredAuth();
+        const { store } = await import("../redux/store");
+        const { logout } = await import("../redux/authSlice");
         store.dispatch(logout());
         return Promise.reject(error);
       }
@@ -96,11 +97,11 @@ api.interceptors.response.use(
           await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
         }
 
+        const { store } = await import("../redux/store");
+        const { updateTokens } = await import("../redux/authSlice");
+
         store.dispatch(
-          updateTokens({
-            token: newAccessToken,
-            refreshToken: newRefreshToken,
-          })
+          updateTokens({ token: newAccessToken, refreshToken: newRefreshToken })
         );
 
         originalRequest.headers = originalRequest.headers ?? {};
@@ -109,6 +110,8 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         await clearStoredAuth();
+        const { store } = await import("../redux/store");
+        const { logout } = await import("../redux/authSlice");
         store.dispatch(logout());
         return Promise.reject(refreshError);
       }

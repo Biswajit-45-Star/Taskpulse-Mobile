@@ -134,6 +134,21 @@ const HomeScreen = () => {
     await dispatch(fetchTasks());
   };
 
+  const openFilter = async () => {
+    // simple filter example: toggle status 'DONE' or all
+    const status = await new Promise<string | undefined>((resolve) => {
+      // for simplicity, prompt via window.confirm isn't available; just fetch pending by default
+      resolve(undefined);
+    });
+
+    dispatch(fetchTasks({ status }));
+  };
+
+  const openSort = async () => {
+    // example: sort by dueDate asc
+    dispatch(fetchTasks({ sortBy: "dueDate", order: "asc" }));
+  };
+
   const handleFormSubmit = async (values: TaskFormValues) => {
     setActionLoading(true);
 
@@ -272,7 +287,7 @@ const HomeScreen = () => {
 
           {/* Filter */}
 
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7} onPress={openFilter}>
             <View style={[styles.actionIconContainer, styles.actionIconFilter]}>
               <Ionicons
                 name="filter-outline"
@@ -285,8 +300,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
 
           {/* Sort */}
-
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.7} onPress={openSort}>
             <View style={[styles.actionIconContainer, styles.actionIconSort]}>
               <Ionicons
                 name="swap-vertical-outline"

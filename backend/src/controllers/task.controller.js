@@ -43,9 +43,21 @@ export const createTask = async (req, res) => {
 
 export const getAllTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({
-      user: req.user._id,
-    }).sort({ createdAt: -1 });
+    const { status, priority, sortBy, order } = req.query;
+
+    const query = { user: req.user._id };
+
+    if (status) query.status = status;
+    if (priority) query.priority = priority;
+
+    // build sort
+    let sortObj = { createdAt: -1 };
+    if (sortBy) {
+      const dir = order === "asc" ? 1 : -1;
+      sortObj = { [sortBy]: dir };
+    }
+
+    const tasks = await Task.find(query).sort(sortObj);
 
     return res.status(200).json({
       success: true,

@@ -23,13 +23,14 @@ const initialState: TaskState = {
 
 export const fetchTasks = createAsyncThunk(
   "tasks/fetchTasks",
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { status?: string; priority?: string; sortBy?: string; order?: string } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      return await getTasks();
+      return await getTasks(params);
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch tasks"
-      );
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch tasks");
     }
   }
 );

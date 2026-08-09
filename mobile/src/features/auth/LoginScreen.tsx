@@ -86,7 +86,7 @@ const LoginScreen = () => {
 
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.log(error.response?.data);
+      console.log(error.response);
       showToast({
         type: "error",
         title: "Login Failed",
